@@ -48,8 +48,8 @@ Specify a custom training dataset.
 #### Requirements
 
 - Place the dataset in the 'datasets' folder.
-- The datset must be in CSV format.
-- Provide '--label' nad '--text' flags to specify the column names for labels and SMS text.
+- The dataset must be in CSV format.
+- Provide '--label' and '--text' flags to specify the column names for labels and SMS text.
 
 #### Example
 ``` 
@@ -63,10 +63,10 @@ docker run -it sms 'Hi guys!!!' --dataset data-en-hi-de-fr.csv --label label --t
 Display detailed output, including:
 
 - A glimpse of the raw dataset.
-- A glimpse of the pre-processed dataset
-- Confusion matrix
-- Classification report 
-- AUC-ROC Score
+- A glimpse of the pre-processed dataset.
+- Confusion matrix.
+- Classification report. 
+- AUC-ROC Score.
 
 #### Example
 ```
