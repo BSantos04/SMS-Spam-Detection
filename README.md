@@ -34,7 +34,7 @@ docker build -t sms .
 
 Now that you have a Docker image, run the following command:
 ```
-docker run -it {image name} '{message to be analyzed inside quotation marks}'
+docker run -it -v $(pwd)/models:/spam-detect/models {image name} '{message to be analyzed inside quotation marks}'
 ```
 ### Example
 ``` 
@@ -53,11 +53,11 @@ Specify a custom training dataset.
 
 #### Example
 ``` 
-docker run -it {image name} '{message to analyze inside quotation marks}' --dataset {name of custom dataset} --label {name of label column} --text {name of SMS text column}
+docker run -it -v $(pwd)/models:/spam-detect/models {image name} '{message to analyze inside quotation marks}' --dataset {name of custom dataset} --label {name of label column} --text {name of SMS text column}
 ``` 
 
 ``` 
-docker run -it sms 'Hi guys!!!' --dataset data-en-hi-de-fr.csv --label label --text text
+docker run -it -v $(pwd)/models:/spam-detect/models sms 'Hi guys!!!' --dataset data-en-hi-de-fr.csv --label label --text text
 ``` 
 ### --verbose
 Display detailed output, including:
@@ -70,11 +70,11 @@ Display detailed output, including:
 
 #### Example
 ```
-docker run -it {image name} '{message to be analyzed inside quotation marks}' --verbose
+docker run -it -v $(pwd)/models:/spam-detect/models {image name} '{message to be analyzed inside quotation marks}' --verbose
 ```
 
 ```
-docker run -it sms 'Congratualations!!! You've been selected to gain a brand new iPhone 17 Pro Max!!! Click on the link below!!!' --verbose
+docker run -it -v $(pwd)/models:/spam-detect/models sms 'Congratualations!!! You've been selected to gain a brand new iPhone 17 Pro Max!!! Click on the link below!!!' --verbose
 ```
 ## References
 - [Docker] (https://www.docker.com/)

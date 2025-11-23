@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import argparse
 import chardet as cd
+from joblib import dump, load
+from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, classification_report, roc_auc_score
@@ -84,7 +86,7 @@ def pre_processing(df, verbose, label="v1", text="v2"):
     except Exception as e:
         raise e
 
-def logistic_regression(df, sms, verbose):
+def logistic_regression(df, sms, verbose, file):
     """
     Summary:
         Train and test a logistic regression model using the pre-processed dataframe and applies the now trained model to a new SMS to check if it's SMAP or not.
@@ -94,6 +96,9 @@ def logistic_regression(df, sms, verbose):
         sms: SMS message that's going to be verified by the model.
     """
     try:
+        # Get the name of the dataset
+        basename = os.path.splitext(os.path.basename(file))[0]
+
         # Define the dependent and idenpendent variables (being X the independent variable and y the dependent variable)
         X = df["SMS"]
         y = df["SPAM/HAM"]
@@ -101,18 +106,19 @@ def logistic_regression(df, sms, verbose):
         # Split the data into training data and test data, setting the test data as 30% of the dataset and training data 70%, with a random state of 42
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-        # Vectorize SMS data to be used in the logistic regression model
-        vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_df=0.9, stop_words=None, min_df=2)
-        X_train_vec = vectorizer.fit_transform(X_train)
-        X_test_vec = vectorizer.transform(X_test)
-
-        # Get an instance of the model, and train and test it with the selected data
-        model = LogisticRegression(class_weight="balanced", max_iter=1000)
-        model.fit(X_train_vec, y_train)
+        # If the model was already trained and tested, it wil load the saved model
+        model_path = f"./models/{basename}.joblib"
+        if os.path.exists(model_path):
+            pipeline = load(model_path)
+        else:
+            # Otherwise, it will create a scikit-learn pipeline that will vectorize data and apply LOgistic Regression for the training and test set
+            pipeline = make_pipeline(TfidfVectorizer(ngram_range=(1, 2), max_df=0.9, stop_words=None, min_df=2), LogisticRegression(class_weight="balanced", max_iter=1000))
+            pipeline.fit(X_train, y_train)
+            dump(pipeline, model_path)
         
         # Get the predictions and probability based on the test datasets
-        y_pred = model.predict(X_test_vec)
-        y_proba = model.predict_proba(X_test_vec)[:, 1]
+        y_pred = pipeline.predict(X_test)
+        y_proba = pipeline.predict_proba(X_test)[:, 1]
 
         # Evaluate the model using methods such as Confusion Matrix, Rating Report (focusing on F1-Score) and AUC-ROC Score
         conf_matrix = confusion_matrix(y_test, y_pred)
@@ -126,14 +132,8 @@ def logistic_regression(df, sms, verbose):
             print("\n\nClassification Report:\n", class_report)
             print(f"\n\nAUC-ROC Score: {auc_roc_score}")
 
-        # Create a new Pandas dataframe with the input message
-        new_data = pd.DataFrame({"SMS": [sms]})
-
-        # Vectorize the message it will be used in the logistic regression model
-        new_data_vec = vectorizer.transform(new_data["SMS"])
-
         # Predict if the message is SPAM or not
-        pred = model.predict(new_data_vec)
+        pred = pipeline.predict([sms])
 
         # Display the results of the prediction
         if verbose:
@@ -177,4 +177,4 @@ if __name__ == "__main__":
         df_cleaned = pre_processing(df, args.verbose)
 
     # Apply logistic regression to check if the input message is SPAM or not
-    logistic_regression(df_cleaned, args.sms, args.verbose)
+    logistic_regression(df_cleaned, args.sms, args.verbose, dataset)

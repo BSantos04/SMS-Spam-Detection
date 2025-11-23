@@ -6,6 +6,7 @@ WORKDIR /spam-detect
 COPY SMS_SPAM_Detection.py /spam-detect/SMS_SPAM_Detection.py
 COPY datasets/ /spam-detect/datasets/
 COPY requirements.txt /spam-detect/requirements.txt
+VOLUME /spam-detect/models/
 
 # Install requirements using pip
 RUN pip install --no-cache-dir -r requirements.txt
