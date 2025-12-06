@@ -74,6 +74,7 @@ def pre_processing(df, verbose, label="v1", text="v2"):
 
         # Ordinal codification for 'SPAM/HAM' column
         ord_spam = {"spam": 0, "ham": 1}
+        # But first we restrain the dataset with only these two values
         df["SPAM/HAM"] = df["SPAM/HAM"].map(ord_spam)
 
         # Display the first 5 rows of the now pre-processed dataset
@@ -104,14 +105,14 @@ def logistic_regression(df, sms, verbose, file):
         y = df["SPAM/HAM"]
 
         # Split the data into training data and test data, setting the test data as 30% of the dataset and training data 70%, with a random state of 42
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
 
         # If the model was already trained and tested, it wil load the saved model
         model_path = f"./models/{basename}.joblib"
         if os.path.exists(model_path):
             pipeline = load(model_path)
         else:
-            # Otherwise, it will create a scikit-learn pipeline that will vectorize data and apply LOgistic Regression for the training and test set
+            # Otherwise, it will create a scikit-learn pipeline that will vectorize data and apply Logistic Regression for the training and test set
             pipeline = make_pipeline(TfidfVectorizer(ngram_range=(1, 2), max_df=0.9, stop_words=None, min_df=2), LogisticRegression(class_weight="balanced", max_iter=1000))
             pipeline.fit(X_train, y_train)
             dump(pipeline, model_path)
@@ -133,16 +134,16 @@ def logistic_regression(df, sms, verbose, file):
             print(f"\n\nAUC-ROC Score: {auc_roc_score}")
 
         # Predict if the message is SPAM or not
-        pred = pipeline.predict([sms])
+        pred = pipeline.predict([sms.strip().lower()])
 
         # Display the results of the prediction
         if verbose:
             print("-"*211)
-            print(f"The message: {sms.strip().lower()}")
+            print(f"The message: {sms}")
             print(f"\nThe verdict: {'SPAM' if pred==0 else 'HAM'}!!!")
             print("-"*211)
         else:
-            print(f"The message: {sms.strip().lower()}")
+            print(f"The message: {sms}")
             print(f"\nThe verdict: {'SPAM' if pred==0 else 'HAM'}!!!")
     except Exception as e:
         raise e
